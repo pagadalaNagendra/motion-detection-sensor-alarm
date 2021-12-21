@@ -1,0 +1,26 @@
+import cv2 # to work with images and camera or bindings designed to solve computer vision problems
+import pydub #to work with audios
+import winsound #same as pydub , but it wont support in some tools
+cam = cv2.VideoCapture(0)  #to open the camera
+while cam.isOpened():
+    ret, frame1 = cam.read() #reads the current frame
+    ret, frame2 = cam.read() # reads next frame
+    diff = cv2.absdiff(frame1, frame2)  #gives the absolute differences between 2 frames
+    gray = cv2.cvtColor(diff, cv2.COLOR_RGB2GRAY)#converts the coloursacape of frame from RGB to gray scape
+    blur = cv2.GaussianBlur(gray, (5, 5), 0) # softs the image and reduces blurrs
+    _, thresh = cv2.threshold(blur, 20, 255, cv2.THRESH_BINARY) # removes the unnecessary noise in the video
+    dilated = cv2.dilate(thresh, None, iterations=3)
+    contours, _ = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)# to find the counters(otlines of the objects)
+   # cv2.drawContours(frame1, contours, -1, (0, 255, 0), 2)
+    for c in contours:
+        if cv2.contourArea(c) < 5000:  #checks whether the object is tiny/unnecessary or something else
+            continue
+        x, y, w, h = cv2.boundingRect(c) #takes the coordinates of the object
+        cv2.rectangle(frame1, (x, y), (x+w, y+h), (0, 255, 0), 2) #draws the rectangle around the object
+        #pydub.PlaySound('alert wav', pydub.SND_ASYNC)
+        winsound.Beep(500, 200) # plays the beep sound
+    if cv2.waitKey(10) == ord('q'):  # q is used to stop the program
+        break
+    cv2.imshow('my cam', frame1)  #showing the colour video as how humans can sees
+    cv2.imshow('Granny Cam',diff) # shows the grayscape video as how computer sees
+
